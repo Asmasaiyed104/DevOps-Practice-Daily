@@ -16,9 +16,12 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: "3.13"
 
       - name: Install dependencies
+        working-directory: 2026/Day-41-to-49/expense-tracker
         run: pip install -r requirements.txt
+
       - name: Run tests
+        working-directory: 2026/Day-41-to-49/expense-tracker
         run: pytest tests/ -v
