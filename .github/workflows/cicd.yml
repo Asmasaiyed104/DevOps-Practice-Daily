@@ -7,7 +7,12 @@ on:
 jobs:
   test:
     name: Run tests
-    runs-on: ubuntu-latest
+    runs-on:
+      ubuntu-latest
+      # whenever you want to run different version , give matrix into startegy into job , same level as runs-on, you can put python-versopn into [], then setup python step to reference  ${matrix.python-version}}
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
 
     steps:
       - name: Check out my code
@@ -16,7 +21,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: ${{matrix.python-version}}
 
       - name: Install dependencies
         working-directory: 2026/Day-41-to-49/expense-tracker
