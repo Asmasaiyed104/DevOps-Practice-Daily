@@ -7,9 +7,8 @@ on:
 jobs:
   test:
     name: Run tests
-    runs-on:
-      ubuntu-latest
-      # whenever you want to run different version , give matrix into startegy into job , same level as runs-on, you can put python-versopn into [], then setup python step to reference  ${matrix.python-version}}
+    runs-on: ubuntu-latest
+    # whenever you want to run different version, give matrix into strategy into job, same level as runs-on, you can put python-version into [], then setup python step to reference ${{ matrix.python-version }}
     strategy:
       matrix:
         python-version: ["3.11", "3.12", "3.13"]
@@ -21,7 +20,14 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{matrix.python-version}}
+          python-version: ${{ matrix.python-version }}
+
+      # Caching: every time the workflow runs, pip normally has to download all dependencies again from scratch, which is slow. Here we save (cache) the ~/.cache/pip folder, and label it using a hash of requirements.txt. Next time, if requirements.txt hasn't changed, GitHub finds the same label and reuses the saved packages instead of downloading everything again — so it runs faster.
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
 
       - name: Install dependencies
         working-directory: 2026/Day-41-to-49/expense-tracker
