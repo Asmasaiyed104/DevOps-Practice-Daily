@@ -1,0 +1,38 @@
+name: Scheduled Health Check
+
+on:
+  schedule:
+    - cron: '0 */12 * * *'   # every 12 hours, always UTC
+  workflow_dispatch:          # lets you test this right now instead of waiting
+
+permissions:
+  contents: read
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pull latest image
+        run: docker pull ${{ secrets.DOCKER_USERNAME }}/expense-tracker:latest
+
+      - name: Run image and capture output
+        id: run
+        run: |
+          output=$(docker run --rm ${{ secrets.DOCKER_USERNAME }}/expense-tracker:latest)
+          echo "$output"
+          if echo "$output" | grep -q "Total spent"; then
+            echo "status=PASSED" >> $GITHUB_OUTPUT
+          else
+            echo "status=FAILED" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Write summary report
+        run: |
+          echo "## Health Check Report" >> $GITHUB_STEP_SUMMARY
+          echo "- Image: expense-tracker:latest" >> $GITHUB_STEP_SUMMARY
+          echo "- Status: ${{ steps.run.outputs.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Time: $(date -u)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Fail the job if the check failed
+        if: steps.run.outputs.status == 'FAILED'
+        run: exit 1

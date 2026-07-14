@@ -1,0 +1,49 @@
+name: Reusable Build and Test
+
+on:
+  workflow_call:
+    inputs:
+      python_version:
+        type: string
+        default: "3.12"
+      run_tests:
+        type: boolean
+        default: true
+    outputs:
+      test_result:
+        description: "Whether tests passed"
+        value: ${{ jobs.build-test.outputs.result }}
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: 2026/Day-41-to-49/expense-tracker
+    outputs:
+      result: ${{ steps.set_result.outputs.result }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python_version }}
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        if: inputs.run_tests == true
+        run: pytest tests/ -v
+
+      - name: Run the CLI once as a smoke check
+        run: python main.py
+
+      - name: Set result
+        id: set_result
+        run: echo "result=passed" >> $GITHUB_OUTPUT

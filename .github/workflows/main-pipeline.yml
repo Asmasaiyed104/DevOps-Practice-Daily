@@ -1,0 +1,63 @@
+name: Main Pipeline
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: expense-tracker
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    uses: ./.github/workflows/reusable-build-test.yml
+    with:
+      run_tests: true
+
+  set-short-sha:
+    needs: build-test
+    runs-on: ubuntu-latest
+    outputs:
+      short_sha: ${{ steps.sha.outputs.short_sha }}
+    steps:
+      - name: Compute short SHA
+        id: sha
+        run: echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
+  docker-latest:
+    needs: build-test
+    uses: ./.github/workflows/reusable-docker.yml
+    with:
+      image_name: expense-tracker
+      tag: latest
+    secrets:
+      docker_username: ${{ secrets.DOCKER_USERNAME }}
+      docker_token: ${{ secrets.DOCKER_TOKEN }}
+
+  docker-sha:
+    needs: set-short-sha
+    uses: ./.github/workflows/reusable-docker.yml
+    with:
+      image_name: expense-tracker
+      tag: sha-${{ needs.set-short-sha.outputs.short_sha }}
+    secrets:
+      docker_username: ${{ secrets.DOCKER_USERNAME }}
+      docker_token: ${{ secrets.DOCKER_TOKEN }}
+
+  deploy:
+    needs: [docker-latest, docker-sha]
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Deploy
+        uses: ./.github/actions/print-banner
+        with:
+          message: "Deploying image: ${{ needs.docker-latest.outputs.image_url }}"
+          status: "deployed"

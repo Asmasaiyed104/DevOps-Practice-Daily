@@ -1,0 +1,22 @@
+name: "Print Banner"
+description: "Prints a short summary banner for this pipeline run"
+
+inputs:
+  message:
+    required: true
+  status:
+    required: false
+    default: "info"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Print banner
+      shell: bash
+      run: |
+        echo "=============================================="
+        echo "  ${{ inputs.message }}"
+        echo "  status: ${{ inputs.status }}"
+        echo "  commit: ${{ github.sha }}"
+        echo "  time:   $(date -u)"
+        echo "=============================================="
