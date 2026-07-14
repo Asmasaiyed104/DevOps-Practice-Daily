@@ -39,7 +39,7 @@ jobs:
 
       - name: Run tests
         if: inputs.run_tests == true
-        run: pytest tests/ -v
+        run: python -m pytest tests/ -v
 
       - name: Run the CLI once as a smoke check
         run: python main.py
