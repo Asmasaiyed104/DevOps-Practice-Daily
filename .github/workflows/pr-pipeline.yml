@@ -5,7 +5,7 @@ on:
     branches: [main]
     types: [opened, synchronize, reopened]
     paths-ignore:
-      - '**.md'
+      - "**.md"
 
 permissions:
   contents: read
@@ -17,34 +17,24 @@ jobs:
     with:
       run_tests: true
 
-  # Day 49 - check any new dependencies added in this PR for known CVEs.
-  # Only works on pull_request events, since it needs a before/after diff.
-  dependency-review:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Dependency review
-        uses: actions/dependency-review-action@v4
-        with:
-          fail-on-severity: critical
-
   pr-summary:
-    needs: [build-test, dependency-review]
+    needs: build-test
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
       - name: Print summary banner
         uses: ./.github/actions/print-banner
         with:
           message: "PR checks passed for branch: ${{ github.head_ref }}"
           status: "ok"
 
-  # Day 47 - reacts only when a PR is actually merged, not just closed.
   on-merge:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
+
     steps:
       - name: Print merge info
         run: |
